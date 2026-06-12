@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课堂随机问题投票考核系统</title>
+    <style>
+        :root {
+            --bg: #f0f4f8;
+            --card-bg: #ffffff;
+            --primary: #4f6ef7;
+            --primary-dark: #3b54d4;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.05);
+            --radius: 14px;
+            --radius-sm: 8px;
+            --transition: 0.2s ease;
+            --font: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 520px;
+            min-height: 680px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: all var(--transition);
+        }
+
+        @media (min-width: 768px) {
+            .app-container {
+                max-width: 600px;
+                min-height: 720px;
+            }
+        }
+        @media (min-width: 1024px) {
+            .app-container {
+                max-width: 750px;
+                min-height: 750px;
+            }
+        }
+
+        /* Header */
+        .app-header {
+            background: linear-gradient(135deg, #4f6ef7 0%, #6c8cff 100%);
+            color: #fff;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .app-header .logo {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .app-header .logo .icon {
+            font-size: 1.5rem;
+        }
+        .app-header .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.18);
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+        .app-header .user-badge:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .role-tag {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .role-tag.teacher {
+            background: #fbbf24;
+            color: #78350f;
+        }
+        .role-tag.student {
+            background: #34d399;
+            color: #064e3b;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            scroll-behavior: smooth;
+        }
+        .main-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        .main-content::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            box-shadow: var(--shadow);
+            transition: all var(--transition);
+        }
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+        .card-header {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+        }
+        .card-header .emoji {
+            font-size: 1.3rem;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition);
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+            font-family: var(--font);
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 14px rgba(79, 110, 247, 0.35);
+        }
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-success:hover {
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-danger:hover {
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+        }
+        .btn-outline {
+            background: #fff;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        .btn-outline:hover {
+            background: #f8faff;
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            border-radius: 18px;
+        }
+        .btn-lg {
+            padding: 13px 26px;
+            font-size: 1rem;
+            border-radius: 30px;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .btn-block {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            color: var(--text-light);
+            letter-spacing: 0.2px;
+        }
+        .input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            transition: all var(--transition);
+            background: #fafbfc;
+            font-family: var(--font);
+        }
+        .input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.1);
+            background: #fff;
+        }
+        select.input {
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast {
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #fff;
+            animation: slideDown 0.35s ease, fadeOut 0.35s ease 2.2s forwards;
+            pointer-events: auto;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 90vw;
+        }
+        .toast.success {
+            background: #10b981;
+        }
+        .toast.error {
+            background: #ef4444;
+        }
+        .toast.info {
+            background: #4f6ef7;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Badge / Tag */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+        .badge-green {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-red {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-yellow {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* List items */
+        .list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            transition: background var(--transition);
+            gap: 10px;
+            border: 1px solid transparent;
+        }
+        .list-item:hover {
+            background: #f8fafc;
+            border-color: var(--border);
+        }
+        .list-item .info {
+            flex: 1;
+            min-width: 0;
+        }
+        .list-item .title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .list-item .subtitle {
+            font-size: 0.78rem;
+            color: var(--text-light);
+        }
+
+        /* Score display */
+        .score-display {
+            font-size: 2.8rem;
+            font-weight: 800;
+            text-align: center;
+            letter-spacing: -1px;
+        }
+        .score-display.positive {
+            color: var(--success);
+        }
+        .score-display.negative {
+            color: var(--danger);
+        }
+
+        /* Ranking table */
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .ranking-table th,
+        .ranking-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .ranking-table th {
+            font-weight: 700;
+            color: var(--text-light);
+            font-size: 0.78rem;
+            letter-spacing: 0.3px;
+            background: #f8fafc;
+            position: sticky;
+            top: 0;
+        }
+        .ranking-table .rank-1 {
+            font-weight: 800;
+            color: #f59e0b;
+        }
+        .ranking-table .rank-2 {
+            font-weight: 700;
+            color: #94a3b8;
+        }
+        .ranking-table .rank-3 {
+            font-weight: 700;
+            color: #cd7836;
+        }
+
+        /* Pulse animation */
+        @keyframes pulse {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.04);
+            }
+        }
+        .pulse {
+            animation: pulse 0.6s ease-in-out;
+        }
+
+        /* Random pick animation */
+        @keyframes spinHighlight {
+            0% {
+                background: #fff;
+            }
+            30% {
+                background: #fef3c7;
+                transform: scale(1.02);
+            }
+            100% {
+                background: #fff;
+            }
+        }
+        .spin-highlight {
+            animation: spinHighlight 1.2s ease-in-out;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-light);
+        }
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 8px;
+        }
+        .empty-state p {
+            font-size: 0.9rem;
+            margin: 4px 0;
+        }
+
+        /* Modal overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        .modal {
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .modal h3 {
+            margin-bottom: 14px;
+            font-size: 1.1rem;
+        }
+        .modal .btn-row {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        /* Highlight for random student */
+        .random-pick-result {
+            background: #fef9c3;
+            border: 2px solid #f59e0b;
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            animation: popIn 0.4s ease;
+        }
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f9;
+            border-radius: 20px;
+            padding: 4px;
+            flex-shrink: 0;
+            margin-bottom: 4px;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 17px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all var(--transition);
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            font-family: var(--font);
+        }
+        .tab.active {
+            background: #fff;
+            color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container" id="appContainer">
+        <!-- Header -->
+        <div class="app-header" id="appHeader">
+            <div class="logo">
+                <span class="icon">🎯</span> 课堂投票考核
+            </div>
+            <div id="headerRight"></div>
+        </div>
+
+        <!-- Tabs (动态渲染) -->
+        <div class="tabs" id="tabBar" style="display:none; margin: 8px 14px 0;"></div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent"></div>
+    </div>
+
+    <!-- Toast容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- 模态层 -->
+    <div id="modalLayer"></div>
+
+    <script>
+        (function() {
+            // ==================== 数据管理 ====================
+            const STORAGE_KEY = 'classroom_voting_system';
+
+            function loadData() {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    try { return JSON.parse(raw); } catch (e) { return getDefaultData(); }
+                }
+                return getDefaultData();
+            }
+
+            function getDefaultData() {
+                return {
+                    users: [], // {id, username, password, role:'teacher'|'student', displayName, createdAt}
+                    classes: [], // {id, name, code, teacherId, students:[], initialScore, correctBonus, wrongPenalty, createdAt}
+                    questions: [], // {id, classId, title, options:[], correctIndex, isActive, publishedAt, closedAt}
+                    answers: [], // {id, questionId, studentId, classId, chosenIndex, isCorrect, scoreChange, timestamp}
+                    scores: [], // {classId, studentId, score} —— 当前积分
+                    currentUserId: null,
+                };
+            }
+
+            function saveData(data) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                // 触发同浏览器其他标签页更新
+                try { window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY })); } catch (e) {}
+            }
+
+            let appData = loadData();
+
+            function getDB() { return appData; }
+
+            function persist() { saveData(appData); }
+
+            function resetToDefault() {
+                appData = getDefaultData();
+                persist();
+            }
+
+            // 监听其他标签页的数据变化
+            window.addEventListener('storage', function(e) {
+                if (e.key === STORAGE_KEY) {
+                    appData = loadData();
+                    refreshUI();
+                }
+            });
+
+            // ==================== 工具函数 ====================
+            function genId() {
+                return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6);
+            }
+
+            function genClassCode() {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                let code = '';
+                for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+                return code;
+            }
+
+            function formatTime(ts) {
+                const d = new Date(ts);
+                const month = (d.getMonth() + 1).toString().padStart(2, '0');
+                const day = d.getDate().toString().padStart(2, '0');
+                const hour = d.getHours().toString().padStart(2, '0');
+                const min = d.getMinutes().toString().padStart(2, '0');
+                return `${month}-${day} ${hour}:${min}`;
+            }
+
+            function getCurrentUser() {
+                const db = getDB();
+                if (!db.currentUserId) return null;
+                return db.users.find(u => u.id === db.currentUserId) || null;
+            }
+
+            function getStudentScore(classId, studentId) {
+                const db = getDB();
+                const record = db.scores.find(s => s.classId === classId && s.studentId === studentId);
+                return record ? record.score : null;
+            }
+
+            function getStudentScoresInClass(classId) {
+                const db = getDB();
+                const cls = db.classes.find(c => c.id === classId);
+                if (!cls) return [];
+                return cls.students.map(studentId => {
+                    const student = db.users.find(u => u.id === studentId);
+                    const scoreRecord = db.scores.find(s => s.classId === classId && s.studentId ===
+                        studentId);
+                    return {
+                        studentId,
+                        displayName: student ? student.displayName : '未知学生',
+                        username: student ? student.username : '',
+                        score: scoreRecord ? scoreRecord.score : cls.initialScore,
+                    };
+                }).sort((a, b) => b.score - a.score);
+            }
+
+            function ensureStudentScore(classId, studentId, initialScore) {
+                const db = getDB();
+                let record = db.scores.find(s => s.classId === classId && s.studentId === studentId);
+                if (!record) {
+                    record = { classId, studentId, score: initialScore };
+                    db.scores.push(record);
+                    persist();
+                }
+                return record;
+            }
+
+            // ==================== Toast ====================
+            function showToast(msg, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = msg;
+                container.appendChild(toast);
+                setTimeout(() => { if (toast.parentNode) toast.remove(); }, 2600);
+            }
+
+            // ==================== 模态框 ====================
+            function showModal(title, contentHTML, buttons = []) {
+                const layer = document.getElementById('modalLayer');
+                const modalDiv = document.createElement('div');
+                modalDiv.className = 'modal-overlay';
+                modalDiv.innerHTML = `
+                    <div class="modal">
+                        <h3>${title}</h3>
+                        <div class="modal-body">${contentHTML}</div>
+                        <div class="btn-row">${buttons.map((b, i) =>
+                            `<button class="btn ${b.cls || 'btn-outline'} btn-sm" data-btn-index="${i}">${b.text}</button>`
+                        ).join('')}</div>
+                    </div>
+                `;
+                layer.appendChild(modalDiv);
+
+                const btnElements = modalDiv.querySelectorAll('[data-btn-index]');
+                btnElements.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const idx = parseInt(this.getAttribute('data-btn-index'));
+                        if (buttons[idx] && buttons[idx].callback) {
+                            const result = buttons[idx].callback(modalDiv);
+                            if (result === false) return; // 不关闭
+                        }
+                        closeModal(modalDiv);
+                    });
+                });
+
+                modalDiv.addEventListener('click', function(e) {
+                    if (e.target === modalDiv) closeModal(modalDiv);
+                });
+            }
+
+            function closeModal(modalDiv) {
+                if (modalDiv && modalDiv.parentNode) {
+                    modalDiv.style.opacity = '0';
+                    modalDiv.style.transition = 'opacity 0.15s ease';
+                    setTimeout(() => { if (modalDiv.parentNode) modalDiv.remove(); }, 160);
+                }
+            }
+
+            function closeAllModals() {
+                const layer = document.getElementById('modalLayer');
+                layer.innerHTML = '';
+            }
+
+            // ==================== 视图渲染 ====================
+            const mainContent = document.getElementById('mainContent');
+            const tabBar = document.getElementById('tabBar');
+            const headerRight = document.getElementById('headerRight');
+            let currentView = 'login';
+            let currentTab = 'dashboard';
+            let activeClassId = null; // 当前选中的班级
+
+            function refreshUI() {
+                const user = getCurrentUser();
+                if (!user) {
+                    renderLoginView();
+                    return;
+                }
+                if (user.role === 'teacher') {
+                    renderTeacherView();
+                } else {
+                    renderStudentView();
+                }
+            }
+
+            function renderHeader() {
+                const user = getCurrentUser();
+                if (!user) {
+                    headerRight.innerHTML = '';
+                    return;
+                }
+                const roleTag = user.role === 'teacher' ?
+                    '<span class="role-tag teacher">👨‍🏫 教师</span>' :
+                    '<span class="role-tag student">🎓 学生</span>';
+                headerRight.innerHTML = `
+                    <div class="user-badge" id="userBadge" title="点击查看选项">
+                        ${roleTag} <strong>${escapeHTML(user.displayName)}</strong> ▾
+                    </div>
+                `;
+                document.getElementById('userBadge').addEventListener('click', function() {
+                    showModal('用户菜单', `
+                        <p style="margin-bottom:8px;">当前身份：<strong>${user.role === 'teacher' ? '教师' : '学生'}</strong></p>
+                        <p style="margin-bottom:8px;">用户名：${escapeHTML(user.username)}</p>
+                        <p>显示名称：${escapeHTML(user.displayName)}</p>
+                    `, [
+                        { text: '切换账号', cls: 'btn-outline', callback: () => { logout(); } },
+                        { text: '关闭', cls: 'btn-primary', callback: () => {} },
+                    ]);
+                });
+            }
+
+            function logout() {
+                const db = getDB();
+                db.currentUserId = null;
+                persist();
+                activeClassId = null;
+                currentTab = 'dashboard';
+                currentView = 'login';
+                closeAllModals();
+                renderLoginView();
+                showToast('已退出登录', 'info');
+            }
+
+            function escapeHTML(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // ==================== 登录/注册视图 ====================
+            function renderLoginView() {
+                currentView = 'login';
+                tabBar.style.display = 'none';
+                headerRight.innerHTML = '';
+                mainContent.innerHTML = `
+                    <div style="text-align:center; padding: 10px 0;">
+                        <div style="font-size:3rem; margin-bottom:6px;">🎯</div>
+                        <h2 style="margin-bottom:4px;">课堂随机投票考核</h2>
+                        <p style="color:var(--text-light); font-size:0.85rem;">积分驱动 · 随机互动 · 期末评比</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span class="emoji">🔑</span> 登录</div>
+                        <div class="form-group">
+                            <label>用户名</label>
+                            <input class="input" id="loginUsername" placeholder="请输入用户名" autocomplete="username">
+                        </div>
+                        <div class="form-group">
+                            <label>密码</label>
+                            <input class="input" type="password" id="loginPassword" placeholder="请输入密码" autocomplete="current-password">
+                        </div>
+                        <button class="btn btn-primary btn-block" id="btnLogin">登 录</button>
+                    </div>
+                    <div class="card" style="text-align:center;">
+                        <p style="color:var(--text-light); font-size:0.85rem; margin-bottom:8px;">还没有账号？</p>
+                        <button class="btn btn-outline btn-block" id="btnGoRegister">注册新账号</button>
+                    </div>
+                    <div style="text-align:center; margin-top:4px;">
+                        <button class="btn btn-sm" style="color:var(--text-light); background:#f1f5f9;" id="btnDemoInfo">
+                            ℹ️ 演示信息
+                        </button>
+                    </div>
+                `;
+
+                document.getElementById('btnLogin').addEventListener('click', handleLogin);
+                document.getElementById('loginPassword').addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') handleLogin();
+                });
+                document.getElementById('btnGoRegister').addEventListener('click', renderRegisterView);
+                document.getElementById('btnDemoInfo').addEventListener('click', function() {
+                    showToast('演示：教师账号 teacher/123456  学生账号 student1/123456', 'info');
+                });
+            }
+
+            function handleLogin() {
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value.trim();
+                if (!username || !password) {
+                    showToast('请填写用户名和密码', 'error');
+                    return;
+                }
+                const db = getDB();
+                const user = db.users.find(u => u.username === username && u.password === password);
+                if (!user) {
+                    // 自动创建演示账号
+                    if (username === 'teacher' && password === '123456') {
+                        const newUser = {
+                            id: genId(),
+                            username: 'teacher',
+                            password: '123456',
+                            role: 'teacher',
+                            displayName: '张老师',
+                            createdAt: Date.now()
+                        };
+                        db.users.push(newUser);
+                        db.currentUserId = newUser.id;
+                        persist();
+                        showToast('欢迎，张老师！（已自动创建演示账号）', 'success');
+                        refreshUI();
+                        return;
+                    }
+                    if (username === 'student1' && password === '123456') {
+                        const newUser = {
+                            id: genId(),
+                            username: 'student1',
+                            password: '123456',
+                            role: 'student',
+                            displayName: '李同学',
+                            createdAt: Date.now()
+                        };
+                        db.users.push(newUser);
+                        db.currentUserId = newUser.id;
+                        persist();
+                        showToast('欢迎，李同学！（已自动创建演示账号）', 'success');
+                        refreshUI();
+                        return;
+                    }
+                    if (username === 'student2' && password === '123456') {
+                        const newUser = {
+                            id: genId(),
+                            username: 'student2',
+                            password: '123456',
+                            role: 'student',
+                            displayName: '王同学',
+                            createdAt: Date.now()
+                        };
+                        db.users.push(newUser);
+                        db.currentUserId = newUser.id;
+                        persist();
+                        showToast('欢迎，王同学！（已自动创建演示账号）', 'success');
+                        refreshUI();
+                        return;
+                    }
+                    showToast('用户名或密码错误', 'error');
+                    return;
+                }
+                db.currentUserId = user.id;
+                persist();
+                showToast(`欢迎回来，${user.displayName}！`, 'success');
+                refreshUI();
+            }
+
+            function renderRegisterView() {
+                currentView = 'register';
+                tabBar.style.display = 'none';
+                headerRight.innerHTML = '';
+                mainContent.innerHTML = `
+                    <div style="text-align:center; padding: 6px 0;">
+                        <h2>📝 注册新账号</h2>
+                    </div>
+                    <div class="card">
+                        <div class="form-group">
+                            <label>选择角色</label>
+                            <select class="input" id="regRole">
+                                <option value="student">🎓 学生</option>
+                                <option value="teacher">👨‍🏫 教师</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>显示名称</label>
+                            <input class="input" id="regDisplayName" placeholder="例如：张三">
+                        </div>
+                        <div class="form-group">
+                            <label>用户名</label>
+                            <input class="input" id="regUsername" placeholder="登录用，字母数字组合" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label>密码</label>
+                            <input class="input" type="password" id="regPassword" placeholder="至少4位" autocomplete="new-password">
+                        </div>
+                        <button class="btn btn-primary btn-block" id="btnRegister">注 册</button>
+                    </div>
+                    <button class="btn btn-outline btn-block" id="btnBackToLogin">← 返回登录</button>
+                `;
+                document.getElementById('btnRegister').addEventListener('click', handleRegister);
+                document.getElementById('btnBackToLogin').addEventListener('click', renderLoginView);
+            }
+
+            function handleRegister() {
+                const role = document.getElementById('regRole').value;
+                const displayName = document.getElementById('regDisplayName').value.trim();
+                const username = document.getElementById('regUsername').value.trim();
+                const password = document.getElementById('regPassword').value.trim();
+                if (!displayName || !username || !password) {
+                    showToast('请填写所有字段', 'error');
+                    return;
+                }
+                if (password.length < 4) {
+                    showToast('密码至少4位', 'error');
+                    return;
+                }
+                const db = getDB();
+                if (db.users.find(u => u.username === username)) {
+                    showToast('该用户名已被注册', 'error');
+                    return;
+                }
+                const newUser = {
+                    id: genId(),
+                    username,
+                    password,
+                    role,
+                    displayName,
+                    createdAt: Date.now()
+                };
+                db.users.push(newUser);
+                db.currentUserId = newUser.id;
+                persist();
+                showToast('注册成功！', 'success');
+                refreshUI();
+            }
+
+            // ==================== 教师视图 ====================
+            function renderTeacherView() {
+                currentView = 'teacher';
+                renderHeader();
+                tabBar.style.display = 'flex';
+                const tabs = [
+                    { key: 'dashboard', label: '📋 班级' },
+                    { key: 'questions', label: '❓ 题库' },
+                    { key: 'ranking', label: '🏆 排名' },
+                ];
+                tabBar.innerHTML = tabs.map(t => `
+                    <button class="tab ${currentTab === t.key ? 'active' : ''}" data-tab="${t.key}">${t.label}</button>
+                `).join('');
+                tabBar.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        currentTab = this.dataset.tab;
+                        activeClassId = null;
+                        renderTeacherView();
+                    });
+                });
+                if (currentTab === 'dashboard') renderTeacherDashboard();
+                else if (currentTab === 'questions') renderTeacherQuestions();
+                else if (currentTab === 'ranking') renderTeacherRanking();
+            }
+
+            function renderTeacherDashboard() {
+                const db = getDB();
+                const user = getCurrentUser();
+                const myClasses = db.classes.filter(c => c.teacherId === user.id);
+                mainContent.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="font-size:1rem;">我的班级 (${myClasses.length})</h3>
+                        <button class="btn btn-primary btn-sm" id="btnCreateClass">+ 创建班级</button>
+                    </div>
+                    ${myClasses.length === 0 ? `
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <p>还没有创建班级</p>
+                            <p style="font-size:0.8rem;">点击上方按钮创建第一个班级</p>
+                        </div>
+                    ` : myClasses.map(cls => {
+                        const studentCount = cls.students.length;
+                        const activeQ = db.questions.filter(q => q.classId === cls.id && q.isActive);
+                        return `
+                            <div class="card" style="cursor:pointer;" data-class-id="${cls.id}">
+                                <div class="card-header">
+                                    <span class="emoji">🏫</span> ${escapeHTML(cls.name)}
+                                    ${activeQ.length > 0 ? '<span class="badge badge-yellow">投票进行中</span>' : ''}
+                                </div>
+                                <p style="font-size:0.85rem; color:var(--text-light);">
+                                    邀请码：<strong style="color:var(--primary); font-size:1rem;">${cls.code}</strong> 
+                                    &nbsp;|&nbsp; 学生：${studentCount}人 
+                                    &nbsp;|&nbsp; 初始积分：${cls.initialScore}
+                                </p>
+                                <p style="font-size:0.78rem; color:var(--text-light);">
+                                    答对+${cls.correctBonus}分 | 答错-${cls.wrongPenalty}分
+                                </p>
+                                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+                                    <button class="btn btn-outline btn-sm btn-manage-class" data-class-id="${cls.id}">管理</button>
+                                    <button class="btn btn-outline btn-sm btn-class-questions" data-class-id="${cls.id}">题目(${db.questions.filter(q=>q.classId===cls.id).length})</button>
+                                    <button class="btn btn-outline btn-sm btn-class-ranking" data-class-id="${cls.id}">排名</button>
+                                    <button class="btn btn-danger btn-sm btn-delete-class" data-class-id="${cls.id}">删除</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                `;
+                // 事件绑定
+                document.getElementById('btnCreateClass')?.addEventListener('click', showCreateClassModal);
+                document.querySelectorAll('.btn-manage-class').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        activeClassId = this.dataset.classId;
+                        showManageClassModal(activeClassId);
+                    });
+                });
+                document.querySelectorAll('.btn-class-questions').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        activeClassId = this.dataset.classId;
+                        currentTab = 'questions';
+                        renderTeacherView();
+                    });
+                });
+                document.querySelectorAll('.btn-class-ranking').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        activeClassId = this.dataset.classId;
+                        currentTab = 'ranking';
+                        renderTeacherView();
+                    });
+                });
+                document.querySelectorAll('.btn-delete-class').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const cid = this.dataset.classId;
+                        showModal('确认删除', '<p>删除班级将同时删除相关题目、答题记录和积分数据，此操作不可恢复。</p>', [
+                            { text: '取消', cls: 'btn-outline', callback: () => {} },
+                            {
+                                text: '确认删除',
+                                cls: 'btn-danger',
+                                callback: () => {
+                                    const db2 = getDB();
+                                    db2.classes = db2.classes.filter(c => c.id !== cid);
+                                    db2.questions = db2.questions.filter(q => q.classId !== cid);
+                                    db2.answers = db2.answers.filter(a => a.classId !== cid);
+                                    db2.scores = db2.scores.filter(s => s.classId !== cid);
+                                    if (activeClassId === cid) activeClassId = null;
+                                    persist();
+                                    renderTeacherView();
+                                    showToast('班级已删除', 'info');
+                                }
+                            },
+                        ]);
+                    });
+                });
+                // 点击卡片也能管理
+                document.querySelectorAll('.card[data-class-id]').forEach(card => {
+                    card.addEventListener('click', function() {
+                        activeClassId = this.dataset.classId;
+                        showManageClassModal(activeClassId);
+                    });
+                });
+            }
+
+            function showCreateClassModal() {
+                showModal('创建新班级', `
+                    <div class="form-group">
+                        <label>班级名称</label>
+                        <input class="input" id="newClassName" placeholder="例如：2024级计算机科学1班">
+                    </div>
+                    <div class="form-group">
+                        <label>初始积分（每人）</label>
+                        <input class="input" type="number" id="newClassInitScore" value="100" min="0" max="1000">
+                    </div>
+                    <div class="form-group">
+                        <label>答对加分</label>
+                        <input class="input" type="number" id="newClassCorrectBonus" value="10" min="1" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label>答错扣分</label>
+                        <input class="input" type="number" id="newClassWrongPenalty" value="5" min="0" max="100">
+                    </div>
+                `, [
+                    { text: '取消', cls: 'btn-outline', callback: () => {} },
+                    {
+                        text: '创建',
+                        cls: 'btn-primary',
+                        callback: (modalDiv) => {
+                            const name = modalDiv.querySelector('#newClassName').value.trim();
+                            const initScore = parseInt(modalDiv.querySelector('#newClassInitScore').value) ||
+                                100;
+                            const correctBonus = parseInt(modalDiv.querySelector('#newClassCorrectBonus')
+                                .value) || 10;
+                            const wrongPenalty = parseInt(modalDiv.querySelector('#newClassWrongPenalty')
+                                .value) || 5;
+                            if (!name) { showToast('请输入班级名称', 'error'); return false; }
+                            const db = getDB();
+                            const user = getCurrentUser();
+                            const cls = {
+                                id: genId(),
+                                name,
+                                code: genClassCode(),
+                                teacherId: user.id,
+                                students: [],
+                                initialScore: initScore,
+                                correctBonus,
+                                wrongPenalty,
+                                createdAt: Date.now(),
+                            };
+                            db.classes.push(cls);
+                            persist();
+                            renderTeacherView();
+                            showToast(`班级 "${name}" 创建成功！邀请码：${cls.code}`, 'success');
+                        }
+                    },
+                ]);
+            }
+
+            function showManageClassModal(classId) {
+                const db = getDB();
+                const cls = db.classes.find(c => c.id === classId);
+                if (!cls) return;
+                const students = cls.students.map(sid => db.users.find(u => u.id === sid)).filter(Boolean);
+                const activeQ = db.questions.filter(q => q.classId === classId && q.isActive);
+                const scores = getStudentScoresInClass(classId);
+                showModal(`管理班级：${escapeHTML(cls.name)}`, `
+                    <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:8px;">
+                        邀请码：<strong style="color:var(--primary); font-size:1.1rem;">${cls.code}</strong> 
+                        | 学生：${students.length}人 | 初始积分：${cls.initialScore}
+                    </p>
+                    ${activeQ.length > 0 ? `<p style="color:#f59e0b; font-weight:600;">⚠️ 当前有 ${activeQ.length} 个活跃投票</p>` : ''}
+                    <div style="max-height:250px; overflow-y:auto; margin-top:8px;">
+                        <strong>学生列表：</strong>
+                        ${students.length === 0 ? '<p style="color:var(--text-light);">暂无学生加入</p>' : 
+                        students.map(s => {
+                            const sc = scores.find(sc2 => sc2.studentId === s.id);
+                            const scVal = sc ? sc.score : cls.initialScore;
+                            return `<div class="list-item" style="font-size:0.85rem;">
+                                <span>🎓 ${escapeHTML(s.displayName)}</span>
+                                <span style="font-weight:700;">积分：${scVal}</span>
+                                <button class="btn btn-sm btn-outline btn-adjust-score" data-sid="${s.id}" style="padding:4px 10px; font-size:0.7rem;">调整</button>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                `, [
+                    {
+                        text: '关闭活跃投票',
+                        cls: 'btn-warning btn-sm',
+                        callback: () => {
+                            activeQ.forEach(q => { q.isActive = false;
+                                q.closedAt = Date.now(); });
+                            persist();
+                            showToast('已关闭所有活跃投票', 'info');
+                            showManageClassModal(classId);
+                            return false;
+                        }
+                    },
+                    { text: '关闭', cls: 'btn-primary btn-sm', callback: () => { renderTeacherView(); } },
+                ]);
+                // 绑定调整积分按钮
+                setTimeout(() => {
+                    document.querySelectorAll('.btn-adjust-score').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const sid = this.dataset.sid;
+                            const student = db.users.find(u => u.id === sid);
+                            const currentScore = getStudentScore(classId, sid) ?? cls
+                                .initialScore;
+                            showModal(`调整积分 - ${student?.displayName || '学生'}`, `
+                                <p>当前积分：<strong>${currentScore}</strong></p>
+                                <div class="form-group">
+                                    <label>新积分值</label>
+                                    <input class="input" type="number" id="adjustScoreVal" value="${currentScore}">
+                                </div>
+                            `, [
+                                { text: '取消', cls: 'btn-outline', callback: () => {} },
+                                {
+                                    text: '确认',
+                                    cls: 'btn-primary',
+                                    callback: (md) => {
+                                        const newVal = parseInt(md.querySelector(
+                                            '#adjustScoreVal').value);
+                                        if (isNaN(newVal)) { showToast('请输入有效数字',
+                                                'error'); return false; }
+                                        const db2 = getDB();
+                                        let rec = db2.scores.find(s => s.classId ===
+                                            classId && s.studentId === sid);
+                                        if (rec) rec.score = newVal;
+                                        else db2.scores.push({ classId, studentId: sid,
+                                            score: newVal });
+                                        persist();
+                                        showToast('积分已更新', 'success');
+                                        showManageClassModal(classId);
+                                    }
+                                },
+                            ]);
+                        });
+                    });
+                }, 100);
+            }
+
+            function renderTeacherQuestions() {
+                const db = getDB();
+                const user = getCurrentUser();
+                const myClasses = db.classes.filter(c => c.teacherId === user.id);
+                // 如果没有选中班级，自动选第一个
+                if (!activeClassId && myClasses.length > 0) activeClassId = myClasses[0].id;
+                const cls = db.classes.find(c => c.id === activeClassId);
+                const questions = cls ? db.questions.filter(q => q.classId === activeClassId) : [];
+                mainContent.innerHTML = `
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                        <label style="font-weight:600; font-size:0.85rem;">选择班级：</label>
+                        <select class="input" id="selectClassForQuestions" style="flex:1; min-width:150px;">
+                            ${myClasses.map(c => `<option value="${c.id}" ${c.id === activeClassId ? 'selected' : ''}>${escapeHTML(c.name)}</option>`).join('')}
+                        </select>
+                    </div>
+                    <button class="btn btn-primary btn-block" id="btnAddQuestion" ${!cls ? 'disabled' : ''}>+ 添加题目</button>
+                    ${!cls ? '<div class="empty-state"><div class="icon">📭</div><p>请先选择或创建班级</p></div>' : 
+                    questions.length === 0 ? '<div class="empty-state"><div class="icon">📝</div><p>该班级暂无题目</p></div>' :
+                    questions.map(q => `
+                        <div class="card">
+                            <div class="card-header">
+                                ${q.isActive ? '<span class="badge badge-yellow">🟢 投票中</span>' : '<span class="badge badge-blue">已关闭</span>'}
+                                ${escapeHTML(q.title)}
+                            </div>
+                            <div style="font-size:0.82rem; color:var(--text-light);">
+                                ${q.options.map((opt, i) => `${String.fromCharCode(65+i)}. ${escapeHTML(opt)} ${i === q.correctIndex ? '✅' : ''}`).join(' &nbsp;|&nbsp; ')}
+                            </div>
+                            <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                                ${!q.isActive ? `<button class="btn btn-success btn-sm btn-publish" data-qid="${q.id}">📢 发布投票</button>` : 
+                                `<button class="btn btn-warning btn-sm btn-close-vote" data-qid="${q.id}">🔒 结束投票</button>`}
+                                <button class="btn btn-outline btn-sm btn-random-pick" data-qid="${q.id}">🎲 随机抽人</button>
+                                <button class="btn btn-danger btn-sm btn-delete-q" data-qid="${q.id}">删除</button>
+                            </div>
+                            ${q.isActive ? `<div class="random-pick-result" id="pickResult_${q.id}" style="display:none; margin-top:8px;"></div>` : ''}
+                        </div>
+                    `).join('')}
+                `;
+                document.getElementById('selectClassForQuestions')?.addEventListener('change', function() {
+                    activeClassId = this.value;
+                    renderTeacherView();
+                });
+                document.getElementById('btnAddQuestion')?.addEventListener('click', showAddQuestionModal);
+                document.querySelectorAll('.btn-publish').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const qid = this.dataset.qid;
+                        const q = db.questions.find(q2 => q2.id === qid);
+                        if (q) { q.isActive = true;
+                            q.publishedAt = Date.now();
+                            q.closedAt = null;
+                            persist();
+                            renderTeacherView();
+                            showToast('题目已发布，学生可投票！', 'success'); }
+                    });
+                });
+                document.querySelectorAll('.btn-close-vote').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const qid = this.dataset.qid;
+                        const q = db.questions.find(q2 => q2.id === qid);
+                        if (q) { q.isActive = false;
+                            q.closedAt = Date.now();
+                            persist();
+                            renderTeacherView();
+                            showToast('投票已结束', 'info'); }
+                    });
+                });
+                document.querySelectorAll('.btn-random-pick').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const qid = this.dataset.qid;
+                        handleRandomPick(qid);
+                    });
+                });
+                document.querySelectorAll('.btn-delete-q').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const qid = this.dataset.qid;
+                        showModal('确认删除', '<p>删除题目将同时删除相关答题记录。</p>', [
+                            { text: '取消', cls: 'btn-outline', callback: () => {} },
+                            {
+                                text: '删除',
+                                cls: 'btn-danger',
+                                callback: () => {
+                                    const db2 = getDB();
+                                    db2.questions = db2.questions.filter(q2 => q2.id !==
+                                        qid);
+                                    db2.answers = db2.answers.filter(a => a.questionId !==
+                                        qid);
+                                    persist();
+                                    renderTeacherView();
+                                    showToast('题目已删除', 'info');
+                                }
+                            },
+                        ]);
+                    });
+                });
+            }
+
+            function showAddQuestionModal() {
+                if (!activeClassId) { showToast('请先选择班级', 'error'); return; }
+                showModal('添加题目', `
+                    <div class="form-group">
+                        <label>题目内容</label>
+                        <input class="input" id="qTitle" placeholder="例如：1+1等于几？">
+                    </div>
+                    <div class="form-group"><label>选项A</label><input class="input q-opt" id="optA" placeholder="选项A"></div>
+                    <div class="form-group"><label>选项B</label><input class="input q-opt" id="optB" placeholder="选项B"></div>
+                    <div class="form-group"><label>选项C</label><input class="input q-opt" id="optC" placeholder="选项C（可选）"></div>
+                    <div class="form-group"><label>选项D</label><input class="input q-opt" id="optD" placeholder="选项D（可选）"></div>
+                    <div class="form-group">
+                        <label>正确答案</label>
+                        <select class="input" id="qCorrect">
+                            <option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option>
+                        </select>
+                    </div>
+                `, [
+                    { text: '取消', cls: 'btn-outline', callback: () => {} },
+                    {
+                        text: '添加',
+                        cls: 'btn-primary',
+                        callback: (modalDiv) => {
+                            const title = modalDiv.querySelector('#qTitle').value.trim();
+                            const optA = modalDiv.querySelector('#optA').value.trim();
+                            const optB = modalDiv.querySelector('#optB').value.trim();
+                            const optC = modalDiv.querySelector('#optC').value.trim();
+                            const optD = modalDiv.querySelector('#optD').value.trim();
+                            const correctIndex = parseInt(modalDiv.querySelector('#qCorrect').value);
+                            const options = [optA, optB];
+                            if (optC) options.push(optC);
+                            if (optD) options.push(optD);
+                            if (!title || !optA || !optB) { showToast('请填写题目和至少两个选项', 'error'); return false; }
+                            if (correctIndex >= options.length) { showToast('正确答案超出选项范围', 'error'); return false; }
+                            const db = getDB();
+                            const q = {
+                                id: genId(),
+                                classId: activeClassId,
+                                title,
+                                options,
+                                correctIndex,
+                                isActive: false,
+                                publishedAt: null,
+                                closedAt: null,
+                            };
+                            db.questions.push(q);
+                            persist();
+                            renderTeacherView();
+                            showToast('题目添加成功', 'success');
+                        }
+                    },
+                ]);
+            }
+
+            function handleRandomPick(questionId) {
+                const db = getDB();
+                const q = db.questions.find(q2 => q2.id === questionId);
+                if (!q) return;
+                const cls = db.classes.find(c => c.id === q.classId);
+                if (!cls || cls.students.length === 0) {
+                    showToast('该班级没有学生，无法随机抽取', 'error');
+                    return;
+                }
+                // 随机选一个学生
+                const randomIndex = Math.floor(Math.random() * cls.students.length);
+                const pickedStudentId = cls.students[randomIndex];
+                const student = db.users.find(u => u.id === pickedStudentId);
+                const resultDiv = document.getElementById('pickResult_' + questionId);
+                if (resultDiv) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.classList.add('spin-highlight');
+                    resultDiv.innerHTML = `🎯 随机抽中：<strong>${student ? escapeHTML(student.displayName) : '未知学生'}</strong>（用户名：${student?.username || 'N/A'}）<br>
+                        <span style="font-size:0.8rem;">请该同学在 "${escapeHTML(q.title)}" 中投票作答！</span>`;
+                    setTimeout(() => resultDiv.classList.remove('spin-highlight'), 1300);
+                }
+                showToast(`随机抽中：${student?.displayName || '未知学生'}`, 'info');
+            }
+
+            function renderTeacherRanking() {
+                const db = getDB();
+                const user = getCurrentUser();
+                const myClasses = db.classes.filter(c => c.teacherId === user.id);
+                if (!activeClassId && myClasses.length > 0) activeClassId = myClasses[0].id;
+                const cls = db.classes.find(c => c.id === activeClassId);
+                const scores = cls ? getStudentScoresInClass(activeClassId) : [];
+                mainContent.innerHTML = `
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                        <label style="font-weight:600; font-size:0.85rem;">选择班级：</label>
+                        <select class="input" id="selectClassForRanking" style="flex:1; min-width:150px;">
+                            ${myClasses.map(c => `<option value="${c.id}" ${c.id === activeClassId ? 'selected' : ''}>${escapeHTML(c.name)}</option>`).join('')}
+                        </select>
+                    </div>
+                    ${!cls ? '<div class="empty-state"><div class="icon">📭</div><p>请选择班级</p></div>' :
+                    scores.length === 0 ? '<div class="empty-state"><div class="icon">🏆</div><p>暂无学生数据</p></div>' :
+                    `<div class="card" style="padding:8px;">
+                        <table class="ranking-table">
+                            <thead><tr><th>排名</th><th>学生</th><th>积分</th><th>答题次数</th></tr></thead>
+                            <tbody>
+                                ${scores.map((s, i) => {
+                                    const answerCount = db.answers.filter(a => a.classId === activeClassId && a.studentId === s.studentId).length;
+                                    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+                                    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1);
+                                    return `<tr>
+                                        <td class="${rankClass}">${medal}</td>
+                                        <td>${escapeHTML(s.displayName)}</td>
+                                        <td style="font-weight:700;">${s.score}</td>
+                                        <td>${answerCount}次</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>`
+                    }
+                `;
+                document.getElementById('selectClassForRanking')?.addEventListener('change', function() {
+                    activeClassId = this.value;
+                    renderTeacherView();
+                });
+            }
+
+            // ==================== 学生视图 ====================
+            function renderStudentView() {
+                currentView = 'student';
+                renderHeader();
+                tabBar.style.display = 'flex';
+                const tabs = [
+                    { key: 'dashboard', label: '📋 我的班级' },
+                    { key: 'vote', label: '🗳️ 答题投票' },
+                    { key: 'ranking', label: '🏆 排名' },
+                ];
+                tabBar.innerHTML = tabs.map(t => `
+                    <button class="tab ${currentTab === t.key ? 'active' : ''}" data-tab="${t.key}">${t.label}</button>
+                `).join('');
+                tabBar.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        currentTab = this.dataset.tab;
+                        activeClassId = null;
+                        renderStudentView();
+                    });
+                });
+                if (currentTab === 'dashboard') renderStudentDashboard();
+                else if (currentTab === 'vote') renderStudentVote();
+                else if (currentTab === 'ranking') renderStudentRanking();
+            }
+
+            function renderStudentDashboard() {
+                const db = getDB();
+                const user = getCurrentUser();
+                const enrolledClasses = db.classes.filter(c => c.students.includes(user.id));
+                mainContent.innerHTML = `
+                    <button class="btn btn-primary btn-block" id="btnJoinClass">🔗 通过邀请码加入班级</button>
+                    ${enrolledClasses.length === 0 ? `
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <p>还没有加入任何班级</p>
+                            <p style="font-size:0.8rem;">点击上方按钮，输入老师提供的邀请码</p>
+                        </div>
+                    ` : enrolledClasses.map(cls => {
+                        const teacher = db.users.find(u => u.id === cls.teacherId);
+                        const score = getStudentScore(cls.id, user.id) ?? cls.initialScore;
+                        const activeQ = db.questions.filter(q => q.classId === cls.id && q.isActive);
+                        return `
+                            <div class="card">
+                                <div class="card-header">
+                                    <span class="emoji">🏫</span> ${escapeHTML(cls.name)}
+                                    ${activeQ.length > 0 ? '<span class="badge badge-yellow">有投票</span>' : ''}
+                                </div>
+                                <p style="font-size:0.85rem; color:var(--text-light);">
+                                    教师：${teacher ? escapeHTML(teacher.displayName) : '未知'} 
+                                    &nbsp;|&nbsp; 我的积分：<strong style="font-size:1.1rem;">${score}</strong>
+                                </p>
+                                <p style="font-size:0.78rem; color:var(--text-light);">
+                                    答对+${cls.correctBonus}分 | 答错-${cls.wrongPenalty}分 | 初始${cls.initialScore}分
+                                </p>
+                                <div style="display:flex; gap:6px; margin-top:6px;">
+                                    <button class="btn btn-outline btn-sm btn-go-vote" data-class-id="${cls.id}">去答题</button>
+                                    <button class="btn btn-outline btn-sm btn-my-history" data-class-id="${cls.id}">我的记录</button>
+                                    <button class="btn btn-danger btn-sm btn-leave-class" data-class-id="${cls.id}">退出</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                `;
+                document.getElementById('btnJoinClass')?.addEventListener('click', showJoinClassModal);
+                document.querySelectorAll('.btn-go-vote').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        activeClassId = this.dataset.classId;
+                        currentTab = 'vote';
+                        renderStudentView();
+                    });
+                });
+                document.querySelectorAll('.btn-my-history').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        activeClassId = this.dataset.classId;
+                        showStudentHistory(activeClassId);
+                    });
+                });
+                document.querySelectorAll('.btn-leave-class').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const cid = this.dataset.classId;
+                        showModal('确认退出', '<p>退出班级将保留你的答题记录，但积分将被移除。</p>', [
+                            { text: '取消', cls: 'btn-outline', callback: () => {} },
+                            {
+                                text: '退出',
+                                cls: 'btn-danger',
+                                callback: () => {
+                                    const db2 = getDB();
+                                    const cls2 = db2.classes.find(c => c.id === cid);
+                                    if (cls2) cls2.students = cls2.students.filter(sid => sid !==
+                                        user.id);
+                                    db2.scores = db2.scores.filter(s => !(s.classId === cid && s
+                                        .studentId === user.id));
+                                    persist();
+                                    renderStudentView();
+                                    showToast('已退出班级', 'info');
+                                }
+                            },
+                        ]);
+                    });
+                });
+            }
+
+            function showJoinClassModal() {
+                showModal('加入班级', `
+                    <div class="form-group">
+                        <label>输入邀请码</label>
+                        <input class="input" id="joinCode" placeholder="6位邀请码，例如：ABC123" maxlength="6" style="text-transform:uppercase; letter-spacing:2px; font-size:1.2rem; text-align:center;">
+                    </div>
+                `, [
+                    { text: '取消', cls: 'btn-outline', callback: () => {} },
+                    {
+                        text: '加入',
+                        cls: 'btn-primary',
+                        callback: (modalDiv) => {
+                            const code = modalDiv.querySelector('#joinCode').value.trim().toUpperCase();
+                            if (!code || code.length < 4) { showToast('请输入有效邀请码', 'error'); return false; }
+                            const db = getDB();
+                            const cls = db.classes.find(c => c.code.toUpperCase() === code);
+                            if (!cls) { showToast('邀请码无效，未找到对应班级', 'error'); return false; }
+                            const user = getCurrentUser();
+                            if (cls.students.includes(user.id)) { showToast('你已在该班级中', 'info'); return; }
+                            cls.students.push(user.id);
+                            ensureStudentScore(cls.id, user.id, cls.initialScore);
+                            persist();
+                            renderStudentView();
+                            showToast(`成功加入班级：${cls.name}`, 'success');
+                        }
+                    },
+                ]);
+            }
+
+            function renderStudentVote() {
+                const db = getDB();
+                const user = getCurrentUser();
+                const enrolledClasses = db.classes.filter(c => c.students.includes(user.id));
+                if (!activeClassId && enrolledClasses.length > 0) activeClassId = enrolledClasses[0].id;
+                const cls = db.classes.find(c => c.id === activeClassId);
+                const activeQuestions = cls ? db.questions.filter(q => q.classId === activeClassId && q.isActive) : [];
+                const allQuestions = cls ? db.questions.filter(q => q.classId === activeClassId) : [];
+                // 检查学生是否已经回答过活跃问题
+                const unansweredActive = activeQuestions.filter(q => {
+                    return !db.answers.find(a => a.questionId === q.id && a.studentId === user.id);
+                });
+                mainContent.innerHTML = `
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                        <label style="font-weight:600; font-size:0.85rem;">班级：</label>
+                        <select class="input" id="selectClassForVote" style="flex:1; min-width:150px;">
+                            ${enrolledClasses.map(c => `<option value="${c.id}" ${c.id === activeClassId ? 'selected' : ''}>${escapeHTML(c.name)}</option>`).join('')}
+                        </select>
+                    </div>
+                    ${!cls ? '<div class="empty-state"><div class="icon">📭</div><p>请选择班级</p></div>' :
+                    unansweredActive.length === 0 && activeQuestions.length === 0 ? `
+                        <div class="empty-state">
+                            <div class="icon">⏳</div>
+                            <p>当前没有活跃的投票</p>
+                            <p style="font-size:0.8rem;">等待老师发布题目...</p>
+                        </div>
+                        ${allQuestions.length > 0 ? `<p style="text-align:center; color:var(--text-light); font-size:0.8rem;">该班级共有 ${allQuestions.length} 道题目</p>` : ''}
+                    ` :
+                    unansweredActive.map(q => `
+                        <div class="card pulse" style="border: 2px solid #f59e0b;">
+                            <div class="card-header">
+                                <span class="badge badge-yellow">🟢 待回答</span>
+                                ${escapeHTML(q.title)}
+                            </div>
+                            <p style="font-size:0.8rem; color:var(--text-light);">请选择你的答案：</p>
+                            <div style="display:flex; flex-direction:column; gap:6px;" id="optionsContainer_${q.id}">
+                                ${q.options.map((opt, i) => `
+                                    <button class="btn btn-outline btn-block btn-vote-option" 
+                                        data-qid="${q.id}" data-opt-index="${i}"
+                                        style="justify-content:flex-start; text-align:left;">
+                                        <strong>${String.fromCharCode(65+i)}.</strong> ${escapeHTML(opt)}
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <p id="voteResult_${q.id}" style="text-align:center; font-weight:700; margin-top:8px; display:none;"></p>
+                        </div>
+                    `).join('')}
+                    ${activeQuestions.length > 0 && unansweredActive.length === 0 ? `
+                        <div class="card" style="border:2px solid #10b981;">
+                            <p style="text-align:center; color:#10b981; font-weight:700;">✅ 你已参与所有活跃投票，等待老师公布结果或发布新题目</p>
+                        </div>
+                    ` : ''}
+                `;
+                document.getElementById('selectClassForVote')?.addEventListener('change', function() {
+                    activeClassId = this.value;
+                    renderStudentView();
+                });
+                document.querySelectorAll('.btn-vote-option').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const qid = this.dataset.qid;
+                        const optIndex = parseInt(this.dataset.optIndex);
+                        handleStudentVote(qid, optIndex);
+                    });
+                });
+            }
+
+            function handleStudentVote(questionId, chosenIndex) {
+                const db = getDB();
+                const user = getCurrentUser();
+                const q = db.questions.find(q2 => q2.id === questionId);
+                if (!q) return;
+                const cls = db.classes.find(c => c.id === q.classId);
+                if (!cls) return;
+                // 检查是否已答过
+                if (db.answers.find(a => a.questionId === questionId && a.studentId === user.id)) {
+                    showToast('你已经回答过这道题了', 'info');
+                    return;
+                }
+                const isCorrect = chosenIndex === q.correctIndex;
+                const scoreChange = isCorrect ? cls.correctBonus : -cls.wrongPenalty;
+                // 记录答案
+                const answer = {
+                    id: genId(),
+                    questionId,
+                    studentId: user.id,
+                    classId: q.classId,
+                    chosenIndex,
+                    isCorrect,
+                    scoreChange,
+                    timestamp: Date.now(),
+                };
+                db.answers.push(answer);
+                // 更新积分
+                let scoreRec = db.scores.find(s => s.classId === q.classId && s.studentId === user.id);
+                if (!scoreRec) {
+                    scoreRec = { classId: q.classId, studentId: user.id, score: cls.initialScore };
+                    db.scores.push(scoreRec);
+                }
+                scoreRec.score += scoreChange;
+                persist();
+                // 显示结果
+                const resultDiv = document.getElementById('voteResult_' + questionId);
+                if (resultDiv) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = isCorrect ?
+                        `<span style="color:#10b981;">✅ 回答正确！积分 <strong>+${cls.correctBonus}</strong>（当前：${scoreRec.score}分）</span>` :
+                        `<span style="color:#ef4444;">❌ 回答错误！正确答案是 <strong>${String.fromCharCode(65+q.correctIndex)}</strong>，积分 <strong>-${cls.wrongPenalty}</strong>（当前：${scoreRec.score}分）</span>`;
+                    resultDiv.classList.add('pulse');
+                }
+                // 禁用选项按钮
+                const optionsContainer = document.getElementById('optionsContainer_' + questionId);
+                if (optionsContainer) {
+                    optionsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
+                }
+                showToast(isCorrect ? '回答正确！' : '回答错误！', isCorrect ? 'success' : 'error');
+            }
+
+            function showStudentHistory(classId) {
+                const db = getDB();
+                const user = getCurrentUser();
+                const cls = db.classes.find(c => c.id === classId);
+                const myAnswers = db.answers.filter(a => a.classId === classId && a.studentId === user.id);
+                const score = getStudentScore(classId, user.id) ?? (cls ? cls.initialScore : 0);
+                showModal('我的答题记录', `
+                    <p>当前积分：<strong>${score}</strong></p>
+                    ${myAnswers.length === 0 ? '<p style="color:var(--text-light);">暂无答题记录</p>' :
+                    myAnswers.slice().reverse().map(a => {
+                        const q = db.questions.find(q2 => q2.id === a.questionId);
+                        return `<div class="list-item" style="font-size:0.82rem;">
+                            <span>${q ? escapeHTML(q.title) : '(已删除)'}</span>
+                            <span style="font-weight:700; color:${a.isCorrect ? '#10b981' : '#ef4444'};">${a.isCorrect ? '+' : ''}${a.scoreChange}分</span>
+                            <span style="font-size:0.7rem; color:var(--text-light);">${formatTime(a.timestamp)}</span>
+                        </div>`;
+                    }).join('')}
+                `, [{ text: '关闭', cls: 'btn-primary', callback: () => {} }]);
+            }
+
+            function renderStudentRanking() {
+                const db = getDB();
+                const user = getCurrentUser();
+                const enrolledClasses = db.classes.filter(c => c.students.includes(user.id));
+                if (!activeClassId && enrolledClasses.length > 0) activeClassId = enrolledClasses[0].id;
+                const cls = db.classes.find(c => c.id === activeClassId);
+                const scores = cls ? getStudentScoresInClass(activeClassId) : [];
+                const myScore = cls ? (getStudentScore(activeClassId, user.id) ?? cls.initialScore) : 0;
+                const myRank = scores.findIndex(s => s.studentId === user.id) + 1;
+                mainContent.innerHTML = `
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                        <label style="font-weight:600; font-size:0.85rem;">班级：</label>
+                        <select class="input" id="selectClassForStuRanking" style="flex:1; min-width:150px;">
+                            ${enrolledClasses.map(c => `<option value="${c.id}" ${c.id === activeClassId ? 'selected' : ''}>${escapeHTML(c.name)}</option>`).join('')}
+                        </select>
+                    </div>
+                    ${cls ? `
+                        <div class="card" style="text-align:center; background: linear-gradient(135deg, #fef9c3, #fef3c7);">
+                            <p style="font-size:0.85rem;">我的排名：<strong style="font-size:1.5rem;">#${myRank || '-'}</strong> / ${scores.length}人</p>
+                            <p>我的积分：<strong style="font-size:1.3rem;">${myScore}</strong></p>
+                        </div>
+                    ` : ''}
+                    ${!cls ? '<div class="empty-state"><div class="icon">📭</div><p>请选择班级</p></div>' :
+                    scores.length === 0 ? '<div class="empty-state"><div class="icon">🏆</div><p>暂无排名数据</p></div>' :
+                    `<div class="card" style="padding:8px;">
+                        <table class="ranking-table">
+                            <thead><tr><th>排名</th><th>学生</th><th>积分</th></tr></thead>
+                            <tbody>
+                                ${scores.map((s, i) => {
+                                    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+                                    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1);
+                                    const isMe = s.studentId === user.id;
+                                    return `<tr style="${isMe ? 'background:#fef9c3;' : ''}">
+                                        <td class="${rankClass}">${medal}</td>
+                                        <td>${escapeHTML(s.displayName)} ${isMe ? '👈' : ''}</td>
+                                        <td style="font-weight:700;">${s.score}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>`
+                    }
+                `;
+                document.getElementById('selectClassForStuRanking')?.addEventListener('change', function() {
+                    activeClassId = this.value;
+                    renderStudentView();
+                });
+            }
+
+            // ==================== 初始化 ====================
+            function init() {
+                const user = getCurrentUser();
+                if (!user) {
+                    renderLoginView();
+                } else if (user.role === 'teacher') {
+                    currentTab = 'dashboard';
+                    renderTeacherView();
+                } else {
+                    currentTab = 'dashboard';
+                    renderStudentView();
+                }
+                // 定期刷新（每5秒检查一次数据变化，用于模拟实时同步）
+                setInterval(() => {
+                    const freshData = loadData();
+                    if (JSON.stringify(freshData) !== JSON.stringify(appData)) {
+                        appData = freshData;
+                        const u = getCurrentUser();
+                        if (u && currentView === 'student' && currentTab === 'vote') {
+                            renderStudentVote();
+                        } else if (u && currentView === 'teacher' && currentTab === 'questions') {
+                            renderTeacherQuestions();
+                        }
+                    }
+                }, 5000);
+            }
+
+            init();
+            console.log('🎯 课堂随机问题投票考核系统已就绪');
+            console.log('演示账号：teacher/123456 (教师) | student1/123456 (学生) | student2/123456 (学生)');
+            console.log('数据存储在浏览器localStorage中，不同标签页可模拟多用户操作');
+        })();
+    </script>
+</body>
+</html>
